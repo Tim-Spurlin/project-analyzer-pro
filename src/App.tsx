@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { useKV } from '@github/spark/hooks'
 import { FileUpload } from './components/FileUpload'
-import { ProcessingEngine } from './components/ProcessingEngine'
+import { DocumentationGenerator } from './components/DocumentationGenerator'
 import { ExportSelector } from './components/ExportSelector'
 import { ProjectStructure } from './components/ProjectStructure'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './components/ui/tabs'
 import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card'
 import { Badge } from './components/ui/badge'
-import { FolderOpen, Cpu, Download, FileText } from '@phosphor-icons/react'
+import { FolderOpen, FileText, Download, Code } from '@phosphor-icons/react'
 
 interface ProjectFile {
   name: string
@@ -55,9 +55,9 @@ function App() {
               <FolderOpen size={24} className="text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">Project Analyzer</h1>
+              <h1 className="text-3xl font-bold tracking-tight">Project Documentation Generator</h1>
               <p className="text-muted-foreground">
-                Upload, process, and export comprehensive project documentation
+                Upload projects and generate detailed documentation with copyable code blocks
               </p>
             </div>
           </div>
@@ -88,8 +88,8 @@ function App() {
               Structure
             </TabsTrigger>
             <TabsTrigger value="processing" disabled={!currentProject} className="flex items-center gap-2">
-              <Cpu size={16} />
-              Process
+              <Code size={16} />
+              Generate
             </TabsTrigger>
             <TabsTrigger value="export" disabled={!currentProject} className="flex items-center gap-2">
               <Download size={16} />
@@ -116,7 +116,7 @@ function App() {
 
           <TabsContent value="processing" className="space-y-6">
             {currentProject && (
-              <ProcessingEngine 
+              <DocumentationGenerator 
                 project={currentProject} 
                 isProcessing={isProcessing}
                 onProcessingStart={handleProcessingStart}

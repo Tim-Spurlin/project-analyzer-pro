@@ -9,6 +9,10 @@
   body {
     @apply bg-background text-foreground font-sans;
   }
+  
+  .font-mono {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, 'SF Mono', Consolas, 'Liberation Mono', Menlo, monospace;
+  }
 }
 
 :root {

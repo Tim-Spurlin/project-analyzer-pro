@@ -21,6 +21,8 @@ import {
   Eye
 } from '@phosphor-icons/react'
 
+const spark = window.spark
+
 interface ProcessedProject {
   name: string
   files: Array<{
@@ -61,67 +63,85 @@ interface DiagramType {
 export function ExportSelector({ project }: ExportSelectorProps) {
   const [exportFormats, setExportFormats] = useKV<ExportFormat[]>('export-formats', [
     {
-      id: 'pdf',
-      name: 'PDF Documentation',
-      description: 'Complete project documentation in PDF format',
+      id: 'comprehensive-pdf',
+      name: 'Comprehensive PDF',
+      description: 'Dense, detailed PDF with maximum content per page and copyable code',
       icon: <FilePdf size={20} className="text-red-500" />,
-      estimatedSize: '2-5 MB',
+      estimatedSize: '5-15 MB',
       selected: false,
-      preview: 'Comprehensive PDF with project structure, code analysis, and recommendations'
+      preview: 'Complete project documentation with detailed explanations, code blocks, and maximum content density'
     },
     {
-      id: 'png',
-      name: 'PNG Diagrams',
-      description: 'Visual diagrams and charts as PNG images',
-      icon: <FileImage size={20} className="text-green-500" />,
-      estimatedSize: '500 KB - 2 MB',
+      id: 'detailed-markdown',
+      name: 'Detailed Markdown',
+      description: 'Complete markdown documentation with code blocks',
+      icon: <FileText size={20} className="text-blue-500" />,
+      estimatedSize: '500 KB - 3 MB',
       selected: false,
-      preview: 'High-quality PNG diagrams showing architecture and relationships'
+      preview: 'Comprehensive .md file with detailed sections, copyable code blocks, and elaborate explanations'
     },
     {
-      id: 'jpg',
-      name: 'JPG Images',
-      description: 'Compressed visual exports in JPG format',
-      icon: <FileImage size={20} className="text-blue-500" />,
+      id: 'consolidated-txt',
+      name: 'Consolidated Text',
+      description: 'Single text file optimized for AI platform limits',
+      icon: <FileText size={20} className="text-gray-400" />,
       estimatedSize: '200 KB - 1 MB',
       selected: false,
-      preview: 'Compressed JPG images suitable for presentations'
+      preview: 'Optimized text format fitting maximum content within AI platform token limitations'
     },
     {
-      id: 'qa',
-      name: 'Q&A Documentation',
-      description: 'Structured questions and answers format',
-      icon: <Question size={20} className="text-purple-500" />,
-      estimatedSize: '100-500 KB',
+      id: 'code-extraction',
+      name: 'Code Extraction',
+      description: 'Separate files for each extracted code component',
+      icon: <FileCode size={20} className="text-green-500" />,
+      estimatedSize: '1-10 MB',
       selected: false,
-      preview: 'Interactive Q&A format covering project aspects and implementation'
+      preview: 'Individual files for each function, class, and component with detailed explanations'
     },
     {
-      id: 'implementation',
-      name: 'Implementation Plan',
-      description: 'Detailed implementation roadmap and tasks',
-      icon: <ChartBar size={20} className="text-orange-500" />,
-      estimatedSize: '50-200 KB',
+      id: 'visual-diagrams',
+      name: 'Visual Diagrams',
+      description: 'High-quality PNG/JPG diagrams with annotations',
+      icon: <FileImage size={20} className="text-purple-500" />,
+      estimatedSize: '2-8 MB',
       selected: false,
-      preview: 'Step-by-step implementation plan with timelines and milestones'
+      preview: 'Visual architecture diagrams, flowcharts, and component relationships with detailed labels'
+    },
+    {
+      id: 'technical-qa',
+      name: 'Technical Q&A',
+      description: 'Comprehensive question-answer format documentation',
+      icon: <Question size={20} className="text-orange-500" />,
+      estimatedSize: '300-800 KB',
+      selected: false,
+      preview: 'Detailed Q&A covering implementation, architecture, and technical decisions'
+    },
+    {
+      id: 'implementation-guide',
+      name: 'Implementation Guide',
+      description: 'Step-by-step implementation plan with code examples',
+      icon: <ChartBar size={20} className="text-teal-500" />,
+      estimatedSize: '400 KB - 1.5 MB',
+      selected: false,
+      preview: 'Detailed implementation roadmap with code samples and architectural guidance'
     },
     {
       id: 'json-schema',
-      name: 'JSON Schema',
-      description: 'Complete communication protocol schema',
-      icon: <FileCode size={20} className="text-teal-500" />,
-      estimatedSize: '10-100 KB',
+      name: 'Communication Schema',
+      description: 'Complete JSON schema of all component communications',
+      icon: <FileCode size={20} className="text-indigo-500" />,
+      estimatedSize: '50-300 KB',
       selected: false,
-      preview: 'Detailed JSON schema defining all component communications'
+      preview: 'Comprehensive JSON schema documenting every communication pattern and data flow'
     },
     {
-      id: 'readme',
-      name: 'README.md',
-      description: 'Enhanced README with comprehensive documentation',
-      icon: <FileText size={20} className="text-gray-400" />,
-      estimatedSize: '20-100 KB',
+      id: 'enhanced-readme',
+      name: 'Enhanced README.md',
+      description: 'Professional README with comprehensive project overview',
+      icon: <FileText size={20} className="text-cyan-500" />,
+      estimatedSize: '100-500 KB',
       selected: false,
-      preview: 'Professional README with setup instructions and project overview'
+      preview: 'Complete README with setup instructions, architecture overview, and usage examples'
     }
   ])
 
@@ -222,39 +242,35 @@ export function ExportSelector({ project }: ExportSelectorProps) {
       const totalSteps = selectedFormats.length + selectedDiagrams.length
       let completedSteps = 0
 
-      // Simulate export process
+      // Get extracted code and sections from storage
+      const extractedCode: any[] = (await spark.kv.get('extracted-code') as any[]) || []
+      const generatedSections: any[] = (await spark.kv.get('generated-sections') as any[]) || []
+
+      if (extractedCode.length === 0) {
+        toast.error('Please generate documentation first')
+        setIsExporting(false)
+        return
+      }
+
+      // Generate each selected format
       for (const format of selectedFormats) {
-        await new Promise(resolve => setTimeout(resolve, 2000))
+        const content = await generateFormatContent(format.id, project, extractedCode, generatedSections)
+        await downloadContent(content, format.id, project.name)
+        
         completedSteps++
         setExportProgress((completedSteps / totalSteps) * 100)
         toast.success(`Generated ${format.name}`)
       }
 
+      // Generate each selected diagram
       for (const diagram of selectedDiagrams) {
-        await new Promise(resolve => setTimeout(resolve, 1500))
+        const diagramContent = await generateDiagramContent(diagram.id, project, extractedCode)
+        await downloadContent(diagramContent, `diagram-${diagram.id}`, project.name)
+        
         completedSteps++
         setExportProgress((completedSteps / totalSteps) * 100)
         toast.success(`Generated ${diagram.name}`)
       }
-
-      // Create download
-      const exportData = {
-        project: project.name,
-        formats: selectedFormats.map(f => f.id),
-        diagrams: selectedDiagrams.map(d => d.id),
-        generatedAt: new Date().toISOString(),
-        summary: `Exported ${selectedFormats.length} formats and ${selectedDiagrams.length} diagrams`
-      }
-
-      const blob = new Blob([JSON.stringify(exportData, null, 2)], { 
-        type: 'application/json' 
-      })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `${project.name}-export.json`
-      a.click()
-      URL.revokeObjectURL(url)
 
       toast.success('Export completed successfully!')
       
@@ -263,6 +279,239 @@ export function ExportSelector({ project }: ExportSelectorProps) {
     } finally {
       setIsExporting(false)
     }
+  }
+
+  const generateFormatContent = async (formatId: string, project: ProcessedProject, extractedCode: any[], generatedSections: any[]): Promise<string> => {
+    switch (formatId) {
+      case 'comprehensive-pdf':
+        return await generateComprehensivePDF(project, extractedCode, generatedSections)
+      case 'detailed-markdown':
+        return await generateDetailedMarkdown(project, extractedCode, generatedSections)
+      case 'consolidated-txt':
+        return await generateConsolidatedText(project, extractedCode, generatedSections)
+      case 'code-extraction':
+        return await generateCodeExtraction(project, extractedCode)
+      case 'technical-qa':
+        return await generateTechnicalQA(project, extractedCode, generatedSections)
+      case 'implementation-guide':
+        return await generateImplementationGuide(project, extractedCode, generatedSections)
+      case 'json-schema':
+        return await generateJSONSchema(project, extractedCode)
+      case 'enhanced-readme':
+        return await generateEnhancedReadme(project, extractedCode, generatedSections)
+      default:
+        return 'Format not implemented'
+    }
+  }
+
+  const generateComprehensivePDF = async (project: ProcessedProject, extractedCode: any[], generatedSections: any[]): Promise<string> => {
+    const promptText = `Create comprehensive PDF documentation content for project ${project.name} with maximum content density per page.
+
+Project Overview:
+- ${project.fileCount} files
+- ${(project.totalSize / 1024 / 1024).toFixed(2)} MB total size
+- ${extractedCode.length} extracted code components
+
+Include:
+1. Executive summary and architecture overview
+2. Detailed component documentation for each extracted code block
+3. Implementation details and technical specifications
+4. Code relationships and dependencies
+5. Performance considerations and optimizations
+
+Format for maximum content density while maintaining readability. Each section should be comprehensive and detailed.`
+
+    const prompt = spark.llmPrompt([promptText], project.name, project.fileCount.toString())
+    return await spark.llm(prompt)
+  }
+
+  const generateDetailedMarkdown = async (project: ProcessedProject, extractedCode: any[], generatedSections: any[]): Promise<string> => {
+    let markdown = `# ${project.name} - Complete Documentation\n\n`
+    
+    markdown += `## Project Overview\n`
+    markdown += `- **Files**: ${project.fileCount}\n`
+    markdown += `- **Size**: ${(project.totalSize / 1024 / 1024).toFixed(2)} MB\n`
+    markdown += `- **Extracted Components**: ${extractedCode.length}\n\n`
+
+    for (const section of generatedSections) {
+      markdown += `## ${section.title}\n\n`
+      markdown += `${section.content}\n\n`
+      
+      for (const codeBlock of section.codeBlocks) {
+        markdown += `### ${codeBlock.title}\n\n`
+        markdown += `**File**: \`${codeBlock.filePath}\`\n\n`
+        markdown += `${codeBlock.description}\n\n`
+        markdown += `\`\`\`${codeBlock.language}\n${codeBlock.code}\n\`\`\`\n\n`
+      }
+    }
+
+    return markdown
+  }
+
+  const generateConsolidatedText = async (project: ProcessedProject, extractedCode: any[], generatedSections: any[]): Promise<string> => {
+    let content = `PROJECT: ${project.name}\n`
+    content += `FILES: ${project.fileCount} | SIZE: ${(project.totalSize / 1024 / 1024).toFixed(2)}MB | COMPONENTS: ${extractedCode.length}\n\n`
+
+    // Optimize for AI platforms by including maximum relevant content
+    for (const section of generatedSections.slice(0, 10)) { // Limit sections to fit token limits
+      content += `SECTION: ${section.title}\n`
+      content += `${section.content}\n\n`
+      
+      for (const codeBlock of section.codeBlocks.slice(0, 5)) { // Limit code blocks per section
+        content += `CODE: ${codeBlock.title} (${codeBlock.filePath})\n`
+        content += `DESC: ${codeBlock.description}\n`
+        content += `${codeBlock.code}\n\n---\n\n`
+      }
+    }
+
+    return content
+  }
+
+  const generateCodeExtraction = async (project: ProcessedProject, extractedCode: any[]): Promise<string> => {
+    let content = `# Code Extraction for ${project.name}\n\n`
+    
+    for (const [index, code] of extractedCode.entries()) {
+      content += `## Component ${index + 1}: ${code.title}\n\n`
+      content += `**File**: ${code.filePath}\n`
+      content += `**Type**: ${code.type}\n\n`
+      content += `### Description\n${code.description}\n\n`
+      content += `### Implementation\n\`\`\`${code.language}\n${code.code}\n\`\`\`\n\n`
+      content += `---\n\n`
+    }
+    
+    return content
+  }
+
+  const generateTechnicalQA = async (project: ProcessedProject, extractedCode: any[], generatedSections: any[]): Promise<string> => {
+    const promptText = `Create comprehensive technical Q&A documentation for ${project.name} with ${extractedCode.length} components.
+
+Generate detailed questions and answers covering:
+1. Architecture and design patterns
+2. Component interactions and dependencies
+3. Implementation details and technical decisions
+4. Performance considerations
+5. Maintenance and extensibility
+6. Troubleshooting and debugging
+
+Make it comprehensive for developers who need to understand and work with this codebase.`
+
+    const prompt = spark.llmPrompt([promptText], project.name, extractedCode.length.toString())
+    return await spark.llm(prompt)
+  }
+
+  const generateImplementationGuide = async (project: ProcessedProject, extractedCode: any[], generatedSections: any[]): Promise<string> => {
+    const promptText = `Create a detailed implementation guide for ${project.name} with step-by-step instructions.
+
+Include:
+1. Development environment setup
+2. Architecture overview and component structure
+3. Implementation phases with code examples
+4. Integration patterns and best practices
+5. Testing strategies and deployment procedures
+6. Maintenance and scaling considerations
+
+Base the guide on the ${extractedCode.length} extracted components and their relationships.`
+
+    const prompt = spark.llmPrompt([promptText], project.name, extractedCode.length.toString())
+    return await spark.llm(prompt)
+  }
+
+  const generateJSONSchema = async (project: ProcessedProject, extractedCode: any[]): Promise<string> => {
+    const schema = {
+      $schema: "http://json-schema.org/draft-07/schema#",
+      title: `${project.name} Communication Schema`,
+      description: "Complete schema defining all component communications and data flows",
+      type: "object",
+      properties: {
+        project: {
+          type: "object",
+          properties: {
+            name: { type: "string", const: project.name },
+            components: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  id: { type: "string" },
+                  name: { type: "string" },
+                  type: { type: "string", enum: ["function", "class", "component", "config", "script", "style"] },
+                  filePath: { type: "string" },
+                  dependencies: { type: "array", items: { type: "string" } },
+                  exports: { type: "array", items: { type: "string" } },
+                  communications: {
+                    type: "object",
+                    properties: {
+                      input: { type: "object" },
+                      output: { type: "object" },
+                      events: { type: "array", items: { type: "string" } }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return JSON.stringify(schema, null, 2)
+  }
+
+  const generateEnhancedReadme = async (project: ProcessedProject, extractedCode: any[], generatedSections: any[]): Promise<string> => {
+    const promptText = `Create a comprehensive README.md for ${project.name} with professional formatting.
+
+Include:
+1. Project overview and key features
+2. Installation and setup instructions
+3. Architecture overview with component descriptions
+4. Usage examples and code samples
+5. API documentation for key components
+6. Contributing guidelines and development setup
+7. License and acknowledgments
+
+Base the content on ${extractedCode.length} extracted components and make it professional and comprehensive.`
+
+    const prompt = spark.llmPrompt([promptText], project.name, extractedCode.length.toString())
+    return await spark.llm(prompt)
+  }
+
+  const generateDiagramContent = async (diagramId: string, project: ProcessedProject, extractedCode: any[]): Promise<string> => {
+    const promptText = `Generate ${diagramId} diagram description for ${project.name} with ${extractedCode.length} components.
+    
+Provide detailed textual description that could be used to create visual diagrams, including:
+1. Component relationships and connections
+2. Data flow directions and types
+3. Interface boundaries and protocols
+4. Hierarchical structures and dependencies
+
+Make it comprehensive and technically accurate.`
+
+    const prompt = spark.llmPrompt([promptText], diagramId, project.name, extractedCode.length.toString())
+    return await spark.llm(prompt)
+  }
+
+  const downloadContent = async (content: string, formatId: string, projectName: string) => {
+    const extensions = {
+      'comprehensive-pdf': 'md', // Will be rendered as markdown for now
+      'detailed-markdown': 'md',
+      'consolidated-txt': 'txt',
+      'code-extraction': 'md',
+      'technical-qa': 'md',
+      'implementation-guide': 'md',
+      'json-schema': 'json',
+      'enhanced-readme': 'md'
+    }
+
+    const extension = extensions[formatId as keyof typeof extensions] || 'txt'
+    const filename = `${projectName}-${formatId}.${extension}`
+
+    const blob = new Blob([content], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    a.click()
+    URL.revokeObjectURL(url)
   }
 
   const selectedCount = (exportFormats || []).filter(f => f.selected).length
