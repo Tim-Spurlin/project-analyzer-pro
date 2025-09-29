@@ -1,1 +1,66 @@
-/* This is where custom CSS goes */
+@import 'tailwindcss';
+@import "tw-animate-css";
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground font-sans;
+  }
+}
+
+:root {
+  --background: oklch(0.059 0.017 264.531);
+  --foreground: oklch(0.956 0.003 264.531);
+  
+  --card: oklch(0.118 0.024 264.531);
+  --card-foreground: oklch(0.956 0.003 264.531);
+  
+  --popover: oklch(0.118 0.024 264.531);
+  --popover-foreground: oklch(0.956 0.003 264.531);
+  
+  --primary: oklch(0.647 0.185 260.751);
+  --primary-foreground: oklch(1 0 0);
+  
+  --secondary: oklch(0.400 0.036 264.531);
+  --secondary-foreground: oklch(1 0 0);
+  
+  --muted: oklch(0.176 0.029 264.531);
+  --muted-foreground: oklch(0.647 0.024 264.531);
+  
+  --accent: oklch(0.647 0.185 162.693);
+  --accent-foreground: oklch(1 0 0);
+  
+  --destructive: oklch(0.617 0.245 27.325);
+  --destructive-foreground: oklch(1 0 0);
+  
+  --border: oklch(0.235 0.031 264.531);
+  --input: oklch(0.235 0.031 264.531);
+  --ring: oklch(0.647 0.185 260.751);
+  
+  --radius: 0.5rem;
+}
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
