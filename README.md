@@ -536,7 +536,7 @@ stateDiagram-v2
 ### Performance Metrics
 
 ```mermaid
-xychart-v2
+xychart
     title "Processing Performance by Project Size"
     x-axis ["Small (< 10MB)", "Medium (10-50MB)", "Large (50-100MB)", "XL (100MB+)"]
     y-axis "Processing Time (seconds)" 0 --> 300
@@ -932,7 +932,7 @@ flowchart TD
 ### Processing Speed Metrics
 
 ```mermaid
-xychart-v2
+xychart
     title "Average Processing Times by File Type"
     x-axis ["JavaScript", "TypeScript", "Python", "Java", "C++", "Markdown", "JSON", "CSS"]
     y-axis "Processing Time (ms)" 0 --> 500
